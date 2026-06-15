@@ -18,6 +18,7 @@ import requests
 
 from .. import config as cfg
 from ..config import SearchConfig
+from ..links import all_links
 from ..models import FlightOffer
 from .base import FlightProvider
 
@@ -108,7 +109,9 @@ class AmadeusProvider(FlightProvider):
             stops=max(len(out_segments) - 1, 0),
             duration_outbound=self._iso_duration(out.get("duration", "")),
             duration_inbound=self._iso_duration(inb.get("duration", "")),
+            links=all_links(config),
             source="amadeus",
+            estimated=False,
         )
 
     @staticmethod

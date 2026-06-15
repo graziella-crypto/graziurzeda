@@ -2,6 +2,9 @@
 
 const form = document.getElementById("search-form");
 const statusEl = document.getElementById("status");
+const demoBanner = document.getElementById("demo-banner");
+const realSearch = document.getElementById("real-search");
+const realSearchLinks = document.getElementById("real-search-links");
 const summaryEl = document.getElementById("summary");
 const resultsEl = document.getElementById("results");
 const providerTag = document.getElementById("provider-tag");
@@ -9,13 +12,35 @@ const providerTag = document.getElementById("provider-tag");
 const brl = (v) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-function showStatus(message, kind = "info") {
+const PARTNERS = {
+  kayak: "Kayak",
+  skyscanner: "Skyscanner",
+  google: "Google Voos",
+};
+
+function showStatus(message) {
   if (!message) {
     statusEl.hidden = true;
     return;
   }
   statusEl.hidden = false;
   statusEl.textContent = message;
+}
+
+function renderRealSearch(links) {
+  if (!links || !Object.keys(links).length) {
+    realSearch.hidden = true;
+    return;
+  }
+  realSearch.hidden = false;
+  realSearchLinks.innerHTML = Object.entries(links)
+    .map(
+      ([key, url]) =>
+        `<a class="btn-real" href="${url}" target="_blank" rel="noopener">${
+          PARTNERS[key] || key
+        } ↗</a>`
+    )
+    .join("");
 }
 
 function renderSummary(data) {
@@ -34,18 +59,32 @@ function stopsLabel(stops) {
   return `${stops} paradas`;
 }
 
+function offerLinks(o) {
+  if (!o.links || !Object.keys(o.links).length) return "";
+  const label = o.estimated ? "Ver preço real" : "Reservar";
+  return Object.entries(o.links)
+    .map(
+      ([key, url], i) =>
+        `<a class="btn-link" href="${url}" target="_blank" rel="noopener">${
+          i === 0 ? label + " — " : ""
+        }${PARTNERS[key] || key} ↗</a>`
+    )
+    .join("");
+}
+
 function offerCard(o) {
   const badges = [];
+  if (o.estimated)
+    badges.push('<span class="badge sim">simulação</span>');
   if (o.is_flash_deal)
     badges.push('<span class="badge flash">⚡ Promoção relâmpago</span>');
   if (o.is_deal)
     badges.push(`<span class="badge deal">↓ ${o.discount_pct}% abaixo da mediana</span>`);
   badges.push(`<span class="badge stops">${stopsLabel(o.stops)}</span>`);
 
-  const link = o.deep_link
-    ? `<a class="btn-link" href="${o.deep_link}" target="_blank" rel="noopener">Ver oferta ↗</a>`
+  const priceLabel = o.estimated
+    ? '<span class="price-tag">preço estimado</span>'
     : "";
-
   const discount =
     o.discount_pct > 0
       ? `<span class="price-discount">economia de ${o.discount_pct}%</span>`
@@ -61,8 +100,9 @@ function offerCard(o) {
       </div>
       <div class="offer-price">
         <span class="price-value">${brl(o.price)}</span>
+        ${priceLabel}
         ${discount}
-        ${link}
+        <div class="offer-links">${offerLinks(o)}</div>
       </div>
     </article>`;
 }
@@ -70,6 +110,7 @@ function offerCard(o) {
 async function runSearch(params) {
   resultsEl.innerHTML = '<div class="loading">Procurando as melhores tarifas…</div>';
   summaryEl.hidden = true;
+  demoBanner.hidden = true;
   showStatus("");
 
   try {
@@ -78,16 +119,18 @@ async function runSearch(params) {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
 
-    providerTag.textContent =
-      data.provider === "amadeus"
-        ? "Fonte: API Amadeus (dados reais)"
-        : "Fonte: modo demonstração";
+    const isDemo = data.provider !== "amadeus";
+    providerTag.textContent = isDemo
+      ? "Fonte: modo demonstração (preços simulados)"
+      : "Fonte: API Amadeus (preços reais)";
+    demoBanner.hidden = !isDemo;
 
+    renderRealSearch(data.search_links);
     if (data.notice) showStatus(data.notice);
 
     if (!data.offers.length) {
       resultsEl.innerHTML =
-        '<div class="loading">Nenhuma oferta encontrada para esse trecho/datas.</div>';
+        '<div class="loading">Nenhuma oferta encontrada. Use os links acima para ver os preços reais.</div>';
       return;
     }
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from typing import Optional
 
-
 @dataclass
 class FlightOffer:
     """Uma oferta de passagem (ida e volta) encontrada por um provedor."""
@@ -24,8 +23,11 @@ class FlightOffer:
     stops: int = 0
     duration_outbound: str = ""
     duration_inbound: str = ""
-    deep_link: str = ""
+    # Links de busca REAL já preenchidos (kayak/skyscanner/google).
+    links: dict = field(default_factory=dict)
     source: str = "demo"
+    # True quando o preço é estimado (modo demonstração), não uma tarifa real.
+    estimated: bool = False
 
     # Preenchidos pela camada de análise (service.py)
     is_flash_deal: bool = False
@@ -48,6 +50,8 @@ class SearchResult:
     deals_count: int = 0
     provider: str = "demo"
     notice: str = ""
+    # Links de busca real (GYN→MCZ + datas) para conferir tarifas verdadeiras.
+    search_links: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -59,4 +63,5 @@ class SearchResult:
             "deals_count": self.deals_count,
             "provider": self.provider,
             "notice": self.notice,
+            "search_links": self.search_links,
         }

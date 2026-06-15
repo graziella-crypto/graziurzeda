@@ -5,6 +5,7 @@ from __future__ import annotations
 import statistics
 
 from .config import SearchConfig
+from .links import all_links
 from .models import FlightOffer, SearchResult
 from .providers import get_provider
 from .providers.base import FlightProvider
@@ -36,7 +37,11 @@ class FlightFinder:
     def _analyse(
         self, offers: list[FlightOffer], config: SearchConfig, notice: str
     ) -> SearchResult:
-        result = SearchResult(provider=self.provider.name, notice=notice)
+        result = SearchResult(
+            provider=self.provider.name,
+            notice=notice,
+            search_links=all_links(config),
+        )
         if not offers:
             return result
 

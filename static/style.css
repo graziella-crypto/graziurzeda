@@ -77,6 +77,38 @@ body {
   font-size: 0.9rem;
 }
 
+.demo-banner {
+  margin-top: 1.2rem;
+  background: rgba(255, 107, 74, 0.12);
+  border: 1px solid rgba(255, 107, 74, 0.4);
+  color: #ffd9cd;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.demo-banner strong { color: var(--accent); }
+
+.real-search {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.real-search-label { font-weight: 700; color: var(--accent-2); }
+.real-search-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.btn-real {
+  background: linear-gradient(90deg, var(--green), #27c06a);
+  color: #06321a;
+  font-weight: 800;
+  text-decoration: none;
+  padding: 0.55rem 0.9rem;
+  border-radius: 9px;
+  font-size: 0.88rem;
+}
+.btn-real:hover { filter: brightness(1.08); }
+
 .summary {
   margin-top: 1.4rem;
   display: grid;
@@ -132,10 +164,13 @@ body {
 .badge.flash { background: var(--accent); color: #fff; }
 .badge.deal { background: var(--green); color: #06321a; }
 .badge.stops { background: var(--card-2); color: var(--muted); }
+.badge.sim { background: #6b5bd2; color: #fff; }
 
 .offer-price { text-align: right; display: flex; flex-direction: column; gap: 0.3rem; align-items: flex-end; }
 .price-value { font-size: 1.7rem; font-weight: 800; }
+.price-tag { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
 .price-discount { color: var(--green); font-size: 0.82rem; font-weight: 700; }
+.offer-links { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.2rem; align-items: flex-end; }
 .btn-link {
   background: var(--card-2);
   color: var(--text);
@@ -163,4 +198,5 @@ body {
 @media (max-width: 540px) {
   .offer { grid-template-columns: 1fr; }
   .offer-price { text-align: left; align-items: flex-start; }
+  .offer-links { align-items: flex-start; }
 }

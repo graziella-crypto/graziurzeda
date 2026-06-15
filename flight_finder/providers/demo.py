@@ -15,6 +15,7 @@ import hashlib
 import random
 
 from ..config import SearchConfig
+from ..links import all_links
 from ..models import FlightOffer
 from .base import FlightProvider
 
@@ -56,6 +57,7 @@ class DemoProvider(FlightProvider):
         seed_src = f"{config.origin}{config.destination}{config.departure_date}{config.return_date}"
         seed = int(hashlib.sha256(seed_src.encode()).hexdigest(), 16) % (10**8)
         rng = random.Random(seed)
+        links = all_links(config)
 
         offers: list[FlightOffer] = []
         # Entre 9 e 14 ofertas, variando companhia, horário e número de paradas.
@@ -96,18 +98,10 @@ class DemoProvider(FlightProvider):
                     stops=stops,
                     duration_outbound=out_dur,
                     duration_inbound=in_dur,
-                    deep_link=self._deep_link(airline, config),
+                    links=links,
                     source="demo",
+                    estimated=True,
                 )
             )
 
         return offers
-
-    @staticmethod
-    def _deep_link(airline: str, config: SearchConfig) -> str:
-        """Link de pesquisa no Google Flights, já filtrado pelo trecho/datas."""
-        return (
-            "https://www.google.com/travel/flights?q="
-            f"Voos%20de%20{config.origin}%20para%20{config.destination}"
-            f"%20em%20{config.departure_date}%20volta%20{config.return_date}"
-        )

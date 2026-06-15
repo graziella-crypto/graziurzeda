@@ -108,6 +108,10 @@ body {
   font-size: 0.88rem;
 }
 .btn-real:hover { filter: brightness(1.08); }
+.btn-calendar {
+  background: linear-gradient(90deg, var(--accent-2), #ffb23f);
+  color: #3a2c00;
+}
 
 .summary {
   margin-top: 1.4rem;

@@ -52,6 +52,8 @@ class SearchResult:
     notice: str = ""
     # Links de busca real (GYN→MCZ + datas) para conferir tarifas verdadeiras.
     search_links: dict = field(default_factory=dict)
+    # Calendário de preços do mês (dias mais baratos para a viagem).
+    calendar_link: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -64,4 +66,5 @@ class SearchResult:
             "provider": self.provider,
             "notice": self.notice,
             "search_links": self.search_links,
+            "calendar_link": self.calendar_link,
         }

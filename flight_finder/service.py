@@ -5,7 +5,7 @@ from __future__ import annotations
 import statistics
 
 from .config import SearchConfig
-from .links import all_links
+from .links import all_links, price_calendar
 from .models import FlightOffer, SearchResult
 from .providers import get_provider
 from .providers.base import FlightProvider
@@ -71,6 +71,7 @@ class FlightFinder:
             provider=self.provider.name,
             notice=notice,
             search_links=all_links(config),
+            calendar_link=price_calendar(config),
         )
         if not offers:
             return result

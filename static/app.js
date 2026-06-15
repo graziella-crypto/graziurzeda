@@ -15,8 +15,13 @@ const brl = (v) =>
 const PARTNERS = {
   kayak: "Kayak",
   skyscanner: "Skyscanner",
+  decolar: "Decolar",
+  latam: "LATAM",
   google: "Google Voos",
 };
+
+// Botões mostrados em cada card de oferta (resto fica no topo, p/ não poluir).
+const OFFER_PARTNERS = ["kayak", "decolar", "google"];
 
 function showStatus(message) {
   if (!message) {
@@ -27,13 +32,13 @@ function showStatus(message) {
   statusEl.textContent = message;
 }
 
-function renderRealSearch(links) {
+function renderRealSearch(links, calendarLink) {
   if (!links || !Object.keys(links).length) {
     realSearch.hidden = true;
     return;
   }
   realSearch.hidden = false;
-  realSearchLinks.innerHTML = Object.entries(links)
+  let html = Object.entries(links)
     .map(
       ([key, url]) =>
         `<a class="btn-real" href="${url}" target="_blank" rel="noopener">${
@@ -41,6 +46,10 @@ function renderRealSearch(links) {
         } ↗</a>`
     )
     .join("");
+  if (calendarLink) {
+    html += `<a class="btn-real btn-calendar" href="${calendarLink}" target="_blank" rel="noopener">📅 Calendário de preços ↗</a>`;
+  }
+  realSearchLinks.innerHTML = html;
 }
 
 function renderSummary(data) {
@@ -62,10 +71,11 @@ function stopsLabel(stops) {
 function offerLinks(o) {
   if (!o.links || !Object.keys(o.links).length) return "";
   const label = o.estimated ? "Ver preço real" : "Reservar";
-  return Object.entries(o.links)
+  const keys = OFFER_PARTNERS.filter((k) => o.links[k]);
+  return keys
     .map(
-      ([key, url], i) =>
-        `<a class="btn-link" href="${url}" target="_blank" rel="noopener">${
+      (key, i) =>
+        `<a class="btn-link" href="${o.links[key]}" target="_blank" rel="noopener">${
           i === 0 ? label + " — " : ""
         }${PARTNERS[key] || key} ↗</a>`
     )
@@ -125,7 +135,7 @@ async function runSearch(params) {
       : "Fonte: API Amadeus (preços reais)";
     demoBanner.hidden = !isDemo;
 
-    renderRealSearch(data.search_links);
+    renderRealSearch(data.search_links, data.calendar_link);
     if (data.notice) showStatus(data.notice);
 
     if (!data.offers.length) {

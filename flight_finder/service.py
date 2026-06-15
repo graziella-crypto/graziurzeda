@@ -18,20 +18,50 @@ class FlightFinder:
         self.provider = provider or get_provider()
 
     def search(self, config: SearchConfig) -> SearchResult:
+        notice = ""
         try:
             offers = self.provider.search(config)
-            notice = ""
+            # API respondeu, mas sem voos (comum no ambiente de TESTE da Amadeus).
+            if not offers and self.provider.name == "amadeus":
+                notice = (
+                    "A API Amadeus respondeu, mas não retornou voos para este "
+                    "trecho/datas. No ambiente de TESTE a cobertura é limitada "
+                    "(rotas domésticas como GYN-MCZ podem não existir). Use os "
+                    "links de busca real abaixo ou configure chaves de produção."
+                )
         except Exception as exc:  # rede/credenciais falharam -> cai para demo
             from .providers.demo import DemoProvider
 
+            notice = self._explain_error(exc)
             offers = DemoProvider().search(config)
-            notice = (
-                "Não foi possível consultar a API real "
-                f"({type(exc).__name__}). Exibindo dados de demonstração."
-            )
             self.provider = DemoProvider()
 
         return self._analyse(offers, config, notice)
+
+    @staticmethod
+    def _explain_error(exc: Exception) -> str:
+        """Traduz a falha da API em uma mensagem útil para o usuário."""
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+        if status == 401:
+            return (
+                "Chaves da Amadeus inválidas ou ausentes (erro 401). Confira "
+                "AMADEUS_CLIENT_ID/SECRET e se o AMADEUS_HOST corresponde ao "
+                "ambiente das chaves (teste x produção). Exibindo demonstração."
+            )
+        if status == 429:
+            return (
+                "Limite de requisições da Amadeus atingido (erro 429). "
+                "Tente novamente em instantes. Exibindo demonstração."
+            )
+        if status:
+            return (
+                f"A API Amadeus retornou erro {status}. "
+                "Exibindo dados de demonstração."
+            )
+        return (
+            "Não foi possível conectar à API Amadeus "
+            f"({type(exc).__name__}). Exibindo dados de demonstração."
+        )
 
     # ------------------------------------------------------------- análise
     def _analyse(

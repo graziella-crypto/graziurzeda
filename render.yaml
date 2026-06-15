@@ -12,11 +12,15 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      # Provedor de dados: "demo" (sem credenciais) ou "amadeus" (preços reais).
+      # "auto" usa a Amadeus automaticamente quando as chaves abaixo existirem;
+      # sem chaves, cai no modo demonstração. Não precisa mexer aqui.
       - key: FF_PROVIDER
-        value: demo
-      # Para preços reais, troque FF_PROVIDER para "amadeus" e preencha estas
-      # variáveis no painel do Render (deixe sync:false para não versionar segredos).
+        value: auto
+      # Host da Amadeus. TESTE tem dados limitados (pode não ter GYN-MCZ).
+      # Para dados reais use: https://api.amadeus.com (chaves de produção).
+      - key: AMADEUS_HOST
+        value: https://test.api.amadeus.com
+      # Preencha no painel do Render (Environment). sync:false = não versiona segredos.
       - key: AMADEUS_CLIENT_ID
         sync: false
       - key: AMADEUS_CLIENT_SECRET

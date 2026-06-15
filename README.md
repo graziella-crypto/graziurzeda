@@ -44,8 +44,31 @@ export AMADEUS_CLIENT_SECRET=seu_secret
 python app.py
 ```
 
-> O ambiente padrão é o de **teste** do Amadeus, que tem cobertura de
-> dados limitada. Para produção, defina `AMADEUS_HOST=https://api.amadeus.com`.
+### Atenção: ambiente de Teste x Produção (a pegadinha da Amadeus)
+
+Ao se cadastrar, as chaves geradas são do **ambiente de Teste**
+(`test.api.amadeus.com`), que usa uma base **limitada e parcialmente
+sintética**. Muitas rotas domésticas brasileiras (incluindo **GYN-MCZ**)
+**não retornam voos** nesse ambiente — é o motivo mais comum de "não
+funcionar". Nesse caso o app mostra um aviso e cai na demonstração.
+
+Para tarifas reais de verdade você precisa das chaves de **Produção**:
+
+1. No painel da Amadeus, abra seu app e clique em algo como
+   **"Request production key"** / mude para *Production*.
+2. É preciso cadastrar um **cartão** (há cota mensal gratuita; cobra só
+   se exceder).
+3. Use as chaves de produção **e** defina o host de produção:
+
+```bash
+export AMADEUS_HOST=https://api.amadeus.com
+export AMADEUS_CLIENT_ID=chave_de_producao
+export AMADEUS_CLIENT_SECRET=segredo_de_producao
+```
+
+> Dica: se preferir não cadastrar cartão, mantenha o app como **buscador**
+> — os botões "Ver preços reais" (Kayak/Skyscanner/Google) já trazem as
+> tarifas verdadeiras de GYN→MCZ sem nenhuma chave.
 
 ## Configuração
 

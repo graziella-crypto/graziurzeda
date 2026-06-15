@@ -51,9 +51,15 @@ def config_from_env() -> SearchConfig:
     )
 
 
-# Provedor de dados: "auto" usa a API real (Amadeus) se houver credenciais,
-# caso contrário cai no modo demonstração. Pode forçar "amadeus" ou "demo".
+# Provedor de dados: "auto" escolhe a melhor fonte conforme as credenciais
+# disponíveis (Skyscanner/RapidAPI > Amadeus > demonstração). Pode forçar
+# "skyscanner", "amadeus" ou "demo".
 DATA_PROVIDER = os.environ.get("FF_PROVIDER", "auto").lower()
+
+# Skyscanner via RapidAPI (gratuito, sem cartão): https://rapidapi.com
+# Assine a API "Sky-Scrapper" e copie sua X-RapidAPI-Key.
+RAPIDAPI_KEY = os.environ.get("RAPIDAPI_KEY", "")
+RAPIDAPI_HOST = os.environ.get("RAPIDAPI_HOST", "sky-scrapper.p.rapidapi.com")
 
 AMADEUS_CLIENT_ID = os.environ.get("AMADEUS_CLIENT_ID", "")
 AMADEUS_CLIENT_SECRET = os.environ.get("AMADEUS_CLIENT_SECRET", "")

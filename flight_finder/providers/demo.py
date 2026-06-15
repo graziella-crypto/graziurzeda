@@ -13,11 +13,15 @@ from __future__ import annotations
 
 import hashlib
 import random
+from datetime import datetime, timedelta
 
 from ..config import SearchConfig
-from ..links import all_links
+from ..links import all_links, skyscanner as skyscanner_link
 from ..models import FlightOffer
 from .base import FlightProvider
+
+# Sites/agências fictícios usados para simular o comparativo por buscador.
+_AGENT_NAMES = ["MaxMilhas", "Decolar", "123Milhas", "Kayak", "Skyscanner", "GOL", "LATAM"]
 
 # Companhias que operam o mercado doméstico brasileiro e faixas de preço
 # típicas (ida e volta, em BRL) para um trecho de média distância como GYN-MCZ.
@@ -99,9 +103,47 @@ class DemoProvider(FlightProvider):
                     duration_outbound=out_dur,
                     duration_inbound=in_dur,
                     links=links,
+                    agents=self._fake_agents(rng, price, links),
                     source="demo",
                     estimated=True,
                 )
             )
 
         return offers
+
+    @staticmethod
+    def _fake_agents(rng, price, links) -> list[dict]:
+        """Simula o preço do mesmo voo em alguns sites de busca."""
+        names = rng.sample(_AGENT_NAMES, k=rng.randint(3, 4))
+        agents = []
+        for i, name in enumerate(names):
+            # O primeiro é o mais barato; os demais um pouco acima.
+            factor = 1.0 if i == 0 else rng.uniform(1.02, 1.18)
+            agents.append(
+                {
+                    "name": name,
+                    "price": round(price * factor, 2),
+                    "url": links.get("skyscanner", ""),
+                }
+            )
+        agents.sort(key=lambda a: a["price"])
+        return agents
+
+    def price_calendar(self, config: SearchConfig) -> list[dict]:
+        """Comparativo de datas simulado: 14 dias a partir de 3 dias antes."""
+        try:
+            start = datetime.fromisoformat(config.departure_date) - timedelta(days=3)
+        except ValueError:
+            return []
+        seed = int(
+            hashlib.sha256((config.origin + config.destination + "cal").encode())
+            .hexdigest(),
+            16,
+        ) % (10**8)
+        rng = random.Random(seed)
+        days = []
+        for i in range(14):
+            day = start + timedelta(days=i)
+            price = round(rng.uniform(420, 1150), 2)
+            days.append({"date": day.strftime("%Y-%m-%d"), "price": price, "group": "medium"})
+        return days

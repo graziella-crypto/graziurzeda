@@ -62,12 +62,32 @@ def test_summary_stats_present():
     assert result.provider == "demo"
 
 
+def test_offers_have_agents_sorted():
+    result = FlightFinder(DemoProvider()).search(_config())
+    for o in result.offers:
+        assert o.agents, "cada oferta deve ter preços por site"
+        prices = [a["price"] for a in o.agents]
+        assert prices == sorted(prices), "agentes ordenados do mais barato"
+
+
+def test_calendar_present_and_marks_cheapest():
+    result = FlightFinder(DemoProvider()).search(_config())
+    assert result.calendar, "deve haver comparativo de datas"
+    cheapest = [d for d in result.calendar if d.get("is_cheapest")]
+    assert len(cheapest) >= 1
+    min_price = min(d["price"] for d in result.calendar)
+    assert cheapest[0]["price"] == min_price
+    # Todos os dias têm um grupo de preço atribuído.
+    assert all(d["group"] in {"low", "medium", "high"} for d in result.calendar)
+
+
 def test_to_dict_serializable():
     import json
 
     result = FlightFinder(DemoProvider()).search(_config())
-    # Não deve levantar exceção ao serializar.
-    json.dumps(result.to_dict())
+    # Não deve levantar exceção ao serializar (inclui agents e calendar).
+    payload = json.dumps(result.to_dict())
+    assert "calendar" in payload and "agents" in payload
 
 
 if __name__ == "__main__":

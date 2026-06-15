@@ -5,7 +5,8 @@ from __future__ import annotations
 import statistics
 
 from .config import SearchConfig
-from .links import all_links, price_calendar
+from .links import all_links
+from .links import price_calendar as price_calendar_link
 from .models import FlightOffer, SearchResult
 from .providers import get_provider
 from .providers.base import FlightProvider
@@ -29,14 +30,24 @@ class FlightFinder:
                     "(rotas domésticas como GYN-MCZ podem não existir). Use os "
                     "links de busca real abaixo ou configure chaves de produção."
                 )
+            calendar = self._safe_calendar(self.provider, config)
         except Exception as exc:  # rede/credenciais falharam -> cai para demo
             from .providers.demo import DemoProvider
 
             notice = self._explain_error(exc)
-            offers = DemoProvider().search(config)
             self.provider = DemoProvider()
+            offers = self.provider.search(config)
+            calendar = self._safe_calendar(self.provider, config)
 
-        return self._analyse(offers, config, notice)
+        return self._analyse(offers, config, notice, calendar)
+
+    @staticmethod
+    def _safe_calendar(provider: FlightProvider, config: SearchConfig) -> list[dict]:
+        """Busca o calendário sem deixar uma falha derrubar a busca principal."""
+        try:
+            return provider.price_calendar(config)
+        except Exception:
+            return []
 
     @staticmethod
     def _explain_error(exc: Exception) -> str:
@@ -65,13 +76,18 @@ class FlightFinder:
 
     # ------------------------------------------------------------- análise
     def _analyse(
-        self, offers: list[FlightOffer], config: SearchConfig, notice: str
+        self,
+        offers: list[FlightOffer],
+        config: SearchConfig,
+        notice: str,
+        calendar: list[dict] | None = None,
     ) -> SearchResult:
         result = SearchResult(
             provider=self.provider.name,
             notice=notice,
             search_links=all_links(config),
-            calendar_link=price_calendar(config),
+            calendar_link=price_calendar_link(config),
+            calendar=self._mark_cheapest_days(calendar or []),
         )
         if not offers:
             return result
@@ -98,3 +114,27 @@ class FlightFinder:
         result.flash_deals_count = sum(1 for o in offers if o.is_flash_deal)
         result.deals_count = sum(1 for o in offers if o.is_deal)
         return result
+
+    @staticmethod
+    def _mark_cheapest_days(calendar: list[dict]) -> list[dict]:
+        """Classifica os dias em barato/médio/caro e marca o mais barato."""
+        if not calendar:
+            return calendar
+        prices = [d["price"] for d in calendar if d.get("price")]
+        if not prices:
+            return calendar
+        cheapest = min(prices)
+        lo = statistics.quantiles(prices, n=3)[0] if len(prices) >= 3 else cheapest
+        hi = statistics.quantiles(prices, n=3)[-1] if len(prices) >= 3 else max(prices)
+        for d in calendar:
+            p = d.get("price")
+            d["is_cheapest"] = p == cheapest
+            if p is None:
+                d["group"] = "medium"
+            elif p <= lo:
+                d["group"] = "low"
+            elif p >= hi:
+                d["group"] = "high"
+            else:
+                d["group"] = "medium"
+        return calendar

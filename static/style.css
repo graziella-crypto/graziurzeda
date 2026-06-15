@@ -132,7 +132,77 @@ body {
 .stat-label { font-size: 0.74rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
 .stat-value { font-size: 1.5rem; font-weight: 800; }
 
-.results { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.8rem; }
+.section-title {
+  margin: 1.6rem 0 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.section-title small { color: var(--muted); font-weight: 500; font-size: 0.78rem; }
+
+/* ----- Comparativo de datas ----- */
+.calendar-section { margin-top: 1.2rem; }
+.calendar-strip {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.6rem 0.1rem 0.4rem;
+  -webkit-overflow-scrolling: touch;
+}
+.cal-day {
+  flex: 0 0 auto;
+  min-width: 78px;
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 0.6rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  cursor: pointer;
+  position: relative;
+  color: var(--text);
+  transition: transform 0.08s ease, border-color 0.2s ease;
+}
+.cal-day:hover { transform: translateY(-2px); }
+.cal-dow { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; }
+.cal-dm { font-size: 0.95rem; font-weight: 700; }
+.cal-price { font-size: 0.86rem; font-weight: 700; margin-top: 0.15rem; }
+.cal-day.g-low .cal-price { color: var(--green); }
+.cal-day.g-high .cal-price { color: var(--accent); }
+.cal-day.cheapest { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+.cal-day.selected { border-color: var(--accent-2); box-shadow: 0 0 0 1px var(--accent-2); }
+.cal-tag {
+  position: absolute; top: -8px; right: -6px;
+  background: var(--green); color: #06321a;
+  font-size: 0.6rem; font-weight: 800;
+  padding: 0.1rem 0.35rem; border-radius: 999px;
+  text-transform: uppercase;
+}
+
+/* ----- Comparação por site ----- */
+.agents { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.3rem; width: 100%; max-width: 260px; }
+.agents-title { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.agent-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: center;
+  background: var(--card-2);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 0.84rem;
+}
+.agent-row:hover { background: #2c3566; }
+.agent-row.best { border-color: var(--green); }
+.agent-name { color: var(--muted); }
+.agent-row.best .agent-name { color: var(--green); font-weight: 700; }
+.agent-price { font-weight: 800; white-space: nowrap; }
+
+.results { margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.8rem; }
 
 .offer {
   background: var(--card);

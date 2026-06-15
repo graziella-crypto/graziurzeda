@@ -17,3 +17,10 @@ class FlightProvider(ABC):
     def search(self, config: SearchConfig) -> list[FlightOffer]:
         """Retorna as ofertas encontradas para a configuração informada."""
         raise NotImplementedError
+
+    def price_calendar(self, config: SearchConfig) -> list[dict]:
+        """Comparativo de datas: lista de {date, price, group} de partida.
+
+        Provedores que não suportam calendário retornam lista vazia.
+        """
+        return []

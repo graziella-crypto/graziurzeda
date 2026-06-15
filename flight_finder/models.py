@@ -25,6 +25,8 @@ class FlightOffer:
     duration_inbound: str = ""
     # Links de busca REAL já preenchidos (kayak/skyscanner/google).
     links: dict = field(default_factory=dict)
+    # Preços por site/agência de venda: [{"name","price","url"}], do mais barato.
+    agents: list = field(default_factory=list)
     source: str = "demo"
     # True quando o preço é estimado (modo demonstração), não uma tarifa real.
     estimated: bool = False
@@ -54,6 +56,8 @@ class SearchResult:
     search_links: dict = field(default_factory=dict)
     # Calendário de preços do mês (dias mais baratos para a viagem).
     calendar_link: str = ""
+    # Comparativo de datas: [{"date","price","group","is_cheapest"}].
+    calendar: list = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -67,4 +71,5 @@ class SearchResult:
             "notice": self.notice,
             "search_links": self.search_links,
             "calendar_link": self.calendar_link,
+            "calendar": self.calendar,
         }

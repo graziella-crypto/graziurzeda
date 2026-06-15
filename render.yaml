@@ -12,10 +12,16 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      # "auto" usa a Amadeus automaticamente quando as chaves abaixo existirem;
-      # sem chaves, cai no modo demonstração. Não precisa mexer aqui.
+      # "auto" escolhe a melhor fonte: Skyscanner (RapidAPI) > Amadeus > demo.
+      # Sem chaves, usa o modo demonstração. Não precisa mexer aqui.
       - key: FF_PROVIDER
         value: auto
+      # Skyscanner via RapidAPI (gratuito, sem cartão). Assine a API
+      # "Sky-Scrapper" e cole sua chave no painel do Render (Environment).
+      - key: RAPIDAPI_KEY
+        sync: false
+      - key: RAPIDAPI_HOST
+        value: sky-scrapper.p.rapidapi.com
       # Host da Amadeus. TESTE tem dados limitados (pode não ter GYN-MCZ).
       # Para dados reais use: https://api.amadeus.com (chaves de produção).
       - key: AMADEUS_HOST

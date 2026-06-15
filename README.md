@@ -4,14 +4,35 @@ Aplicativo web para encontrar **passagens aéreas baratas** e **promoções
 relâmpago** no trecho **Goiânia (GYN) → Maceió (MCZ)**, ida e volta, com
 foco no período solicitado: **15/08/2026 a 22/08/2026**.
 
-A aplicação busca as ofertas, ordena pelo menor preço e destaca
-automaticamente:
+Mostra na própria tela:
 
+- 💰 **Comparativo de preços** — as ofertas ordenadas da mais barata, cada
+  uma com os **preços por site/agência** (qual buscador está mais barato),
+  prontos para clicar.
+- 📅 **Comparativo de datas** — uma faixa com os dias próximos e seus
+  preços, destacando o **dia mais barato**. Toque num dia para refazer a
+  busca mantendo a duração da viagem.
 - ⚡ **Promoções relâmpago** — tarifas abaixo de um limite configurável (padrão R$ 700).
-- ↓ **Achados** — tarifas que ficam um percentual abaixo da mediana das tarifas encontradas (padrão 15%).
+- ↓ **Achados** — tarifas abaixo da mediana das tarifas encontradas (padrão 15%).
 
-Também mostra um resumo com a tarifa mais barata, o preço mediano e a
-contagem de promoções e achados.
+> Para preços **reais** na tela, conecte a fonte de dados Skyscanner via
+> RapidAPI (gratuita, sem cartão — veja abaixo). Sem chave, o app funciona
+> em **modo demonstração** com preços simulados claramente sinalizados.
+
+## Preços reais: Skyscanner via RapidAPI (recomendado)
+
+1. Crie uma conta gratuita em <https://rapidapi.com>.
+2. Assine a API **"Sky-Scrapper"** (apiheya) — há **plano gratuito sem cartão**.
+3. Copie sua **X-RapidAPI-Key** e configure:
+
+```bash
+export RAPIDAPI_KEY=sua_chave
+python app.py
+```
+
+No **Render**, basta colar a chave em *Environment* → `RAPIDAPI_KEY`. Como
+`FF_PROVIDER=auto`, o app passa a usar a Skyscanner automaticamente e o
+banner de demonstração some.
 
 ## Como funciona
 
@@ -19,12 +40,13 @@ A busca usa uma arquitetura de provedores:
 
 | Provedor | Quando é usado | Dados |
 |----------|----------------|-------|
-| **Amadeus** | Quando há credenciais configuradas | Reais (API Self-Service) |
-| **Demo** | Padrão / fallback | Estimativas realistas geradas localmente |
+| **Skyscanner** (RapidAPI) | `RAPIDAPI_KEY` configurada | Reais — preços por site + calendário |
+| **Amadeus** | Credenciais Amadeus configuradas | Reais (API Self-Service) |
+| **Demo** | Padrão / fallback | Estimativas geradas localmente |
 
-Sem credenciais, o app já roda imediatamente em **modo demonstração**, com
-preços plausíveis para o trecho — ideal para testar a interface. Para
-preços reais, basta configurar a API Amadeus (gratuita).
+No modo `auto` (padrão), a ordem de preferência é **Skyscanner → Amadeus →
+demonstração**. Sem nenhuma chave, o app roda em **modo demonstração** com
+preços simulados (claramente sinalizados) — ideal para ver a interface.
 
 ## Executando
 
@@ -97,13 +119,15 @@ app.py                      # App Flask (rotas e API)
 flight_finder/
   config.py                 # Configuração (defaults da viagem + env vars)
   models.py                 # FlightOffer / SearchResult
-  service.py                # Orquestra busca + análise de preços
+  links.py                  # Links de busca preenchidos (Kayak/Skyscanner/...)
+  service.py                # Orquestra busca + análise + calendário
   providers/
     base.py                 # Interface FlightProvider
-    demo.py                 # Dados de demonstração
+    demo.py                 # Dados de demonstração (preços + calendário)
+    skyscanner.py           # API Skyscanner via RapidAPI (dados reais)
     amadeus.py              # API Amadeus (dados reais)
 templates/index.html        # Interface
-static/style.css, app.js    # Front-end
+static/style.css, app.js    # Front-end (comparativo de preços e datas)
 test_flight_finder.py       # Testes
 ```
 

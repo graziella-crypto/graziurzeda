@@ -7,7 +7,12 @@ const realSearch = document.getElementById("real-search");
 const realSearchLinks = document.getElementById("real-search-links");
 const summaryEl = document.getElementById("summary");
 const resultsEl = document.getElementById("results");
+const resultsTitle = document.getElementById("results-title");
+const calendarSection = document.getElementById("calendar-section");
+const calendarStrip = document.getElementById("calendar-strip");
 const providerTag = document.getElementById("provider-tag");
+
+const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const brl = (v) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -52,6 +57,62 @@ function renderRealSearch(links, calendarLink) {
   realSearchLinks.innerHTML = html;
 }
 
+// "2026-08-15" -> {dow:"Sex", dm:"15/08"}
+function fmtDay(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return { dow: WEEKDAYS[dt.getUTCDay()], dm: `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}` };
+}
+
+function daysBetween(a, b) {
+  return Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
+}
+
+function addDays(iso, n) {
+  const t = Date.parse(iso) + n * 86400000;
+  const dt = new Date(t);
+  return dt.toISOString().slice(0, 10);
+}
+
+function renderCalendar(calendar) {
+  if (!calendar || !calendar.length) {
+    calendarSection.hidden = true;
+    return;
+  }
+  calendarSection.hidden = false;
+  const currentDep = document.getElementById("departure").value;
+  calendarStrip.innerHTML = calendar
+    .map((d) => {
+      const { dow, dm } = fmtDay(d.date);
+      const cls = [
+        "cal-day",
+        `g-${d.group || "medium"}`,
+        d.is_cheapest ? "cheapest" : "",
+        d.date === currentDep ? "selected" : "",
+      ].join(" ");
+      return `<button class="${cls}" data-date="${d.date}" type="button">
+        <span class="cal-dow">${dow}</span>
+        <span class="cal-dm">${dm}</span>
+        <span class="cal-price">${brl(d.price)}</span>
+        ${d.is_cheapest ? '<span class="cal-tag">menor</span>' : ""}
+      </button>`;
+    })
+    .join("");
+}
+
+// Ao tocar num dia, busca essa data mantendo a duração da viagem.
+calendarStrip.addEventListener("click", (e) => {
+  const btn = e.target.closest(".cal-day");
+  if (!btn) return;
+  const depInput = document.getElementById("departure");
+  const retInput = document.getElementById("return");
+  const nights = Math.max(1, daysBetween(depInput.value, retInput.value) || 7);
+  depInput.value = btn.dataset.date;
+  retInput.value = addDays(btn.dataset.date, nights);
+  const fd = new FormData(form);
+  runSearch(Object.fromEntries(fd.entries()));
+});
+
 function renderSummary(data) {
   summaryEl.hidden = false;
   document.getElementById("stat-cheapest").textContent = data.cheapest
@@ -80,6 +141,22 @@ function offerLinks(o) {
         }${PARTNERS[key] || key} ↗</a>`
     )
     .join("");
+}
+
+function agentsTable(o) {
+  if (!o.agents || !o.agents.length) {
+    return `<div class="offer-links">${offerLinks(o)}</div>`;
+  }
+  const rows = o.agents
+    .map(
+      (a, i) =>
+        `<a class="agent-row ${i === 0 ? "best" : ""}" href="${a.url || "#"}" target="_blank" rel="noopener">
+          <span class="agent-name">${a.name}${i === 0 ? " · menor preço" : ""}</span>
+          <span class="agent-price">${brl(a.price)} ↗</span>
+        </a>`
+    )
+    .join("");
+  return `<div class="agents"><span class="agents-title">Preços por site:</span>${rows}</div>`;
 }
 
 function offerCard(o) {
@@ -112,7 +189,7 @@ function offerCard(o) {
         <span class="price-value">${brl(o.price)}</span>
         ${priceLabel}
         ${discount}
-        <div class="offer-links">${offerLinks(o)}</div>
+        ${agentsTable(o)}
       </div>
     </article>`;
 }
@@ -121,6 +198,8 @@ async function runSearch(params) {
   resultsEl.innerHTML = '<div class="loading">Procurando as melhores tarifas…</div>';
   summaryEl.hidden = true;
   demoBanner.hidden = true;
+  calendarSection.hidden = true;
+  resultsTitle.hidden = true;
   showStatus("");
 
   try {
@@ -136,6 +215,7 @@ async function runSearch(params) {
     demoBanner.hidden = !isDemo;
 
     renderRealSearch(data.search_links, data.calendar_link);
+    renderCalendar(data.calendar);
     if (data.notice) showStatus(data.notice);
 
     if (!data.offers.length) {
@@ -145,6 +225,7 @@ async function runSearch(params) {
     }
 
     renderSummary(data);
+    resultsTitle.hidden = false;
     resultsEl.innerHTML = data.offers.map(offerCard).join("");
   } catch (err) {
     resultsEl.innerHTML = "";
